@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        handleRealmMigration()
+//        handleRealmMigration()
 
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.makeKeyAndVisible()
@@ -24,8 +24,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let layout = UICollectionViewFlowLayout()
         let homeController = HomeController(collectionViewLayout: layout)
-        let navigationController = UINavigationController(rootViewController: homeController)
-        window?.rootViewController = navigationController
+        let homeNavController = UINavigationController(rootViewController: homeController)
+        
+        window?.rootViewController = homeNavController
+        
+//        window?.rootViewController = UINavigationController(rootViewController: RetainCycleController())
         
         return true
     }

@@ -28,8 +28,9 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     var photosArray = [Photo]()
     
-    var photoRealm = try! Realm()
-    var transportRealm = try! Realm()
+//    var photoRealm = try! Realm()
+//    var transportRealm = try! Realm()
+    var realm = try! Realm()
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -42,6 +43,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         
         print(Realm.Configuration.defaultConfiguration.fileURL!)
         
+        setupDefaultRealm()
 //        setupRealm()
         setupUI()
         setupCollectionView()
@@ -49,6 +51,15 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     }
     
     //MARL:- Setup
+    fileprivate func setupDefaultRealm() {
+        
+        
+        
+        
+    }
+    
+    
+    
     fileprivate func setupRealm() {
         guard let photoRealmFileURL = Realm.Configuration.getFileURL("Photo.realm") else {return}
 //        guard let transportRealmFileURL = Realm.Configuration.getFileURL("Transport.realm") else {return}
@@ -57,7 +68,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
 //        let tranportConfig = Realm.Configuration(fileURL: transportRealmFileURL, objectTypes: [Transport.self])
 
         do {
-            photoRealm = try Realm(configuration: photoConfig)
+//            photoRealm = try Realm(configuration: photoConfig)
 //            transportRealm = try Realm(configuration: tranportConfig)
 //
 //            let cars = Transport()
@@ -80,6 +91,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         collectionView.backgroundColor = .white
         
         navigationItem.titleView = segmentedControl
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Read Realm", style: .plain, target: self, action: #selector(readRealm))
         
         view.addSubview(toolBar)
         toolBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
@@ -91,6 +103,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
                             flexibleSpaceItem,
                             UIBarButtonItem(title: "Fetch Photos", style: .plain, target: self, action: #selector(fetchButtonTapped))]
         toolBar.items = toolBarItems
+    
     }
     
     fileprivate func setupCollectionView() {
@@ -112,12 +125,12 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
             self.fetchPhotosByDispatchGroup()
         }
         
-        let fetchPhotosSynchronously = UIAlertAction(title: "Synchronously", style: .default) { (_) in
-            self.fetchPhotosSynchronously()
+        let fetchPhotosSynchronously = UIAlertAction(title: "Asynchronously", style: .default) { (_) in
+            self.fetchPhotosAsynchronously()
         }
         
         let fetchPhotosWithSemaphore = UIAlertAction(title: "With Semaphore", style: .default) { (_) in
-            self.fetchPhotosWithSemaphore()
+//            self.fetchPhotosWithSemaphore()
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
@@ -176,12 +189,13 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     
     //MARK:- Realm
     fileprivate func savePhotoToRealm(photo: Photo) {
-        guard let photoFileURL = Realm.Configuration.getFileURL("Photo.realm") else {return}
-        
-        let config = Realm.Configuration(fileURL: photoFileURL)
+//        guard let photoFileURL = Realm.Configuration.getFileURL("Photo.realm") else {return}
+//
+//        let config = Realm.Configuration(fileURL: photoFileURL)
         
         do {
-            let realm = try Realm(configuration: config)
+//            let realm = try Realm(configuration: config)
+            let realm = try Realm()
             
             let realmPhoto = Photo()
             realmPhoto.id = photo.id
@@ -218,6 +232,24 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         }
     }
     
+    @objc fileprivate func readRealm() {
+        let queue2 = DispatchQueue(label: "queue2", qos: .background)
+        let lock = NSLock()
+        
+        queue2.async {
+            print("Queue2 start")
+            let realm = try! Realm()
+            let objects = realm.objects(Photo.self)
+            
+            lock.lock()
+            objects.forEach({ (photo) in
+                print("Photo", photo.id ?? "", Thread.current)
+            })
+            
+            lock.unlock()
+        }
+    }
+    
     //MARK:- Networking Fetch
     
     /*
@@ -229,7 +261,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         hud.textLabel.text = "Fetching..."
         hud.show(in: self.view)
         
-        FlickrClient.shared.getPhotoListWithText("cars") { (photos, error) in
+        FlickrClient.shared.getPhotoListWithText("cars") { [weak self] (photos, error) in
             print("Get Photos With Text Thread Completed:", Thread.current) //background
             
             DispatchQueue.main.async {
@@ -257,8 +289,8 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
                         
                         if let data = data {
                             photo.imageData = data
-                            self.savePhotoToRealm(photo: photo)
-                            self.photosArray.append(photo)
+                            self?.savePhotoToRealm(photo: photo)
+                            self?.photosArray.append(photo)
                             downloadGroup.leave()
                         }
                     })
@@ -266,7 +298,7 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
                 
                 //Once all images are downloaded, move to main thread to reload collectionView
                 downloadGroup.notify(queue: .main, execute: {
-                    self.collectionView.reloadData()
+                    self?.collectionView.reloadData()
                     hud.dismiss()
                 })
             }
@@ -277,130 +309,119 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     This function fetches photoInformation from Flickr, and then moved the operation synchronously to download
     photoData. Once each photoData is downloaded, it is added to the UI via the main thread.
     */
-    fileprivate func fetchPhotosSynchronously() {
-        let hud = JGProgressHUD(style: .dark)
-        hud.textLabel.text = "Fetching..."
-        hud.show(in: self.view)
-
+    fileprivate func fetchPhotosAsynchronously() {
         FlickrClient.shared.getPhotoListWithText("planes", completion: { (photos, error) in
             print("Get Photos With Text Thread Completed:", Thread.current) //background
-            DispatchQueue.main.async {
-                hud.textLabel.text = "Downloading..."
-            }
 
             if let error = error {
                 print(error.localizedDescription)
                 return
             }
+            
+            guard let photos = photos else {return}
+       
+            let queue = DispatchQueue(label: "queue1", qos: .background, attributes: .concurrent)
+           
+            for (index, _) in photos.enumerated() {
+                queue.async(flags: .barrier) {
+                    FlickrClient.shared.downloadImageData(photos[index], { (data, error) in
+                        print("\(index) Get images:", Thread.current) //background, but asynchronously
 
-            if let photos = photos {
-                let queue = DispatchQueue.global(qos: .default)
-                let downloadGroup = DispatchGroup()
-
-                for (index, _) in photos.enumerated() {
-                    downloadGroup.enter()
-                    queue.sync {
-                        FlickrClient.shared.downloadImageData(photos[index], { (data, error) in
-                            print("\(index) Get images:", Thread.current) //background, but synchronously
-
-                            if let error = error {
-                                print(error.localizedDescription)
-                                return
-                            }
-
-                            if let data = data {
-                                let photo = photos[index]
-                                photo.imageData = data
-                                self.savePhotoToRealm(photo: photo)
-                                DispatchQueue.main.async {
-                                    photo.imageData = data
-                                    self.photosArray.append(photo)
-                                    let indexPath = IndexPath(item: self.photosArray.count - 1, section: 0)
-                                    self.collectionView.insertItems(at: [indexPath])
-                                    downloadGroup.leave()
-                                }
-                            }
-                        })
-                    }
-                }
-
-                downloadGroup.notify(queue: .main, execute: {
-                    hud.dismiss()
-                })
-            }
-        })
-    }
-    
-    
-
-    /*
-    This function is intended to forcefully do both operations back to back, that is to wait for the photoInformation from Flickr to complete, and then hold them in an array.
-    Once this is completed, we then move over to download each photoData.
-    */
-    func fetchPhotosWithSemaphore() {
-        var tempPhotosArray = [Photo]()
-        let semaphore = DispatchSemaphore(value: 0)
-
-//        let hud = JGProgressHUD(style: .dark)
-//        hud.textLabel.text = "Downloading..."
-//
-//        DispatchQueue.main.async {
-//            hud.show(in: self.view)
-//        }
-
-        FlickrClient.shared.getPhotoListWithText("hamster", completion: { (photos, error) in
-            print("Get Photos With Text", Thread.current)
-
-            if let error = error {
-                print(error.localizedDescription)
-                return
-            }
-
-            if let photos = photos {
-                tempPhotosArray = photos
-                print(1)
-                semaphore.signal()
-            }
-
-        })
-        print(2)
-        semaphore.wait() // Waits for semaphore to signal, then move to 3
-        print(3)
-
-//        let downloadGroup = DispatchGroup()
-        for (i,_) in tempPhotosArray.enumerated() {
-//            downloadGroup.enter()
-            FlickrClient.shared.downloadImageData(tempPhotosArray[i], { (data, error) in
-//                print("\(i) Get images:", Thread.current)
-
-                if let error = error {
-                    print(error.localizedDescription)
-                    return
-                }
-
-                if let data = data {
-                    let realmQueue = DispatchQueue(label: "realmQueue", qos: .background)
-                    
-                    realmQueue.async {
-                        let photo = tempPhotosArray[i]
-                        photo.imageData = data
-                        self.savePhotoToRealm(photo: photo)
-                        
-                        DispatchQueue.main.async {
-                            self.photosArray.append(photo)
-                            let indexPath = IndexPath(item: self.photosArray.count - 1, section: 0)
-                            self.collectionView.insertItems(at: [indexPath])
-//                            downloadGroup.leave()
+                        if let error = error {
+                            print(error.localizedDescription)
+                            return
                         }
-                    }
-                }
-            })
 
-//            downloadGroup.notify(queue: .main, execute: {
-//                hud.dismiss()
-//            })
-        }
+                        if let data = data {
+                            let photo = photos[index]
+                            photo.imageData = data
+                            self.savePhotoToRealm(photo: photo)
+                            
+                            DispatchQueue.main.async {
+                                self.photosArray.append(photo)
+                                let indexPath = IndexPath(item: self.photosArray.count - 1, section: 0)
+                                self.collectionView.insertItems(at: [indexPath])
+                            }
+                        }
+                    })
+                }
+               
+            }
+        })
     }
+    
+    
+
+
+//
+//    /*
+//    This function is intended to forcefully do both operations back to back, that is to wait for the photoInformation from Flickr to complete, and then hold them in an array.
+//    Once this is completed, we then move over to download each photoData.
+//    */
+//    func fetchPhotosWithSemaphore() {
+//        var tempPhotosArray = [Photo]()
+//        let semaphore = DispatchSemaphore(value: 0)
+//
+////        let hud = JGProgressHUD(style: .dark)
+////        hud.textLabel.text = "Downloading..."
+////
+////        DispatchQueue.main.async {
+////            hud.show(in: self.view)
+////        }
+//
+//        FlickrClient.shared.getPhotoListWithText("hamster", completion: { (photos, error) in
+//            print("Get Photos With Text", Thread.current)
+//
+//            if let error = error {
+//                print(error.localizedDescription)
+//                return
+//            }
+//
+//            if let photos = photos {
+//                tempPhotosArray = photos
+//                print(1)
+//                semaphore.signal()
+//            }
+//
+//        })
+//        print(2)
+//        semaphore.wait() // Waits for semaphore to signal, then move to 3
+//        print(3)
+//
+////        let downloadGroup = DispatchGroup()
+//        for (i,_) in tempPhotosArray.enumerated() {
+////            downloadGroup.enter()
+//            FlickrClient.shared.downloadImageData(tempPhotosArray[i], { (data, error) in
+////                print("\(i) Get images:", Thread.current)
+//
+//                if let error = error {
+//                    print(error.localizedDescription)
+//                    return
+//                }
+//
+//                if let data = data {
+//                    let realmQueue = DispatchQueue(label: "realmQueue", qos: .background)
+//
+//                    realmQueue.async {
+//                        let photo = tempPhotosArray[i]
+//                        photo.imageData = data
+//                        self.savePhotoToRealm(photo: photo)
+//
+//                        DispatchQueue.main.async {
+//                            self.photosArray.append(photo)
+//                            let indexPath = IndexPath(item: self.photosArray.count - 1, section: 0)
+//                            self.collectionView.insertItems(at: [indexPath])
+////                            downloadGroup.leave()
+//                        }
+//                    }
+//                }
+//            })
+//
+////            downloadGroup.notify(queue: .main, execute: {
+////                hud.dismiss()
+////            })
+//        }
+//    }
     
     
     //MARK:- CollectionView

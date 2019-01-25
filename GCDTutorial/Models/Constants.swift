@@ -26,7 +26,7 @@ struct Constants {
         static let APIKey = "cc2555948d7c31848f732ea4e5317f08"
         static let JSON = "json"
         static let NoJSONCallback = 1
-        static let PerPage = 30
+        static let PerPage = 100
         static let SafeSearch = 1
         
     }

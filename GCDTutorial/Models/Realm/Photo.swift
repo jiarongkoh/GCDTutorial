@@ -11,6 +11,7 @@ import RealmSwift
 
 class Photo: Object {
     @objc dynamic var id: String? = nil
+    @objc dynamic var name: String? = nil
     @objc dynamic var secret: String? = nil
     @objc dynamic var server: String? = nil
     @objc dynamic var farm: Int = 0

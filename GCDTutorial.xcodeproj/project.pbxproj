@@ -18,6 +18,8 @@
 		2A1AA2AE21EF0E7B00CD3B5D /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1AA2AD21EF0E7B00CD3B5D /* Constants.swift */; };
 		2A1AA2B121EF1F0200CD3B5D /* ImageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1AA2B021EF1F0200CD3B5D /* ImageCell.swift */; };
 		2A3BC5E821F02CE80034A739 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3BC5E721F02CE80034A739 /* Photo.swift */; };
+		2AAC18E021FAA5CC0036A84F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AAC18DF21FAA5CC0036A84F /* Extensions.swift */; };
+		2AB92DAB21F5A0820007D24C /* RetainCycleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB92DAA21F5A0820007D24C /* RetainCycleController.swift */; };
 		2ABD6FCA21F17E9800EF9926 /* Transport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABD6FC921F17E9800EF9926 /* Transport.swift */; };
 		2ABD6FCC21F1B16200EF9926 /* Realm + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABD6FCB21F1B16200EF9926 /* Realm + Extensions.swift */; };
 		41043C244926A044ABE56379 /* Pods_GCDTutorialTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF892FB651E68FB19B1EB59C /* Pods_GCDTutorialTests.framework */; };
@@ -61,6 +63,8 @@
 		2A1AA2AD21EF0E7B00CD3B5D /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		2A1AA2B021EF1F0200CD3B5D /* ImageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCell.swift; sourceTree = "<group>"; };
 		2A3BC5E721F02CE80034A739 /* Photo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
+		2AAC18DF21FAA5CC0036A84F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		2AB92DAA21F5A0820007D24C /* RetainCycleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetainCycleController.swift; sourceTree = "<group>"; };
 		2ABD6FC921F17E9800EF9926 /* Transport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transport.swift; sourceTree = "<group>"; };
 		2ABD6FCB21F1B16200EF9926 /* Realm + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Realm + Extensions.swift"; sourceTree = "<group>"; };
 		305C69B5280D8ADA5C5D0CF9 /* Pods-GCDTutorialTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GCDTutorialTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-GCDTutorialTests/Pods-GCDTutorialTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -168,6 +172,7 @@
 			isa = PBXGroup;
 			children = (
 				2A1AA27C21EEFB1800CD3B5D /* HomeController.swift */,
+				2AB92DAA21F5A0820007D24C /* RetainCycleController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -186,6 +191,7 @@
 			isa = PBXGroup;
 			children = (
 				2A1AA2B021EF1F0200CD3B5D /* ImageCell.swift */,
+				2AAC18DF21FAA5CC0036A84F /* Extensions.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -461,6 +467,8 @@
 				2A1AA2AE21EF0E7B00CD3B5D /* Constants.swift in Sources */,
 				2A1AA2B121EF1F0200CD3B5D /* ImageCell.swift in Sources */,
 				2ABD6FCC21F1B16200EF9926 /* Realm + Extensions.swift in Sources */,
+				2AAC18E021FAA5CC0036A84F /* Extensions.swift in Sources */,
+				2AB92DAB21F5A0820007D24C /* RetainCycleController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
