@@ -237,13 +237,12 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         let lock = NSLock()
         
         queue2.async {
-            print("Queue2 start")
             let realm = try! Realm()
             let objects = realm.objects(Photo.self)
             
             lock.lock()
             objects.forEach({ (photo) in
-                print("Photo", photo.id ?? "", Thread.current)
+                print("Reading Photo", photo.id ?? "", Thread.current)
             })
             
             lock.unlock()
