@@ -16,41 +16,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-//        handleRealmMigration()
+
+        handleRealmMigrations()
 
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.makeKeyAndVisible()
-
-        
-        let layout = UICollectionViewFlowLayout()
-        let homeController = HomeController(collectionViewLayout: layout)
-        let homeNavController = UINavigationController(rootViewController: homeController)
-        
-        window?.rootViewController = homeNavController
-        
-//        window?.rootViewController = UINavigationController(rootViewController: RetainCycleController())
+        window?.rootViewController = MainTabBarController()
         
         return true
     }
     
-    fileprivate func handleRealmMigration() {
-        guard let photoRealmFileURL = Realm.Configuration.getFileURL("Photo.realm") else {return}
-
-        let photoMigrationConfig = Realm.Configuration(fileURL: photoRealmFileURL, schemaVersion: 1, migrationBlock: { (migration, oldSchemaVersion) in
-            print("OldSchemaVersion", oldSchemaVersion)
-            if (oldSchemaVersion < 2) {
-                migration.enumerateObjects(ofType: Photo.className()) { oldObject, newObject in
-                    newObject?["tranport"] = "Your value"
-                }
-            }
-        }, objectTypes: [Photo.self])
+    fileprivate func handleRealmMigrations() {
+        handleDefaultRealmMigrations()
+    }
+    
+    fileprivate func handleDefaultRealmMigrations() {
+        NSLog("Default.realm current schema version: %@", Realm.Configuration.defaultConfiguration.schemaVersion)
+//        print(Realm.Configuration.defaultConfiguration.schemaVersion)
         
+        let config = Realm.Configuration(
+            schemaVersion: 2,
+            migrationBlock: { migration, oldSchemaVersion in
+                if (oldSchemaVersion < 1) {}
+                if (oldSchemaVersion < 2) {}
+        })
+        
+        Realm.Configuration.defaultConfiguration = config
+    
         do {
-            let _ = try Realm(configuration: photoMigrationConfig)
+            let _ = try Realm()
+            NSLog("Successful migrated Default Realm")
         } catch let error {
-            print("Migration Error", error.localizedDescription)
+            NSLog("Error migrating Default Realm: %@", error.localizedDescription)
         }
-            
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

@@ -19,91 +19,47 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
         return tb
     }()
     
-    let segmentedControl: UISegmentedControl = {
+    lazy var segmentedControl: UISegmentedControl = {
         let sc = UISegmentedControl(items: ["Cars", "Planes"])
         sc.translatesAutoresizingMaskIntoConstraints = false
         sc.selectedSegmentIndex = 0
+        sc.addTarget(self, action: #selector(segmentedControlValueChanged), for: .valueChanged)
         return sc
     }()
     
+    var searchText: String = "Cars"
+    
     var photosArray = [Photo]()
     
-//    var photoRealm = try! Realm()
-//    var transportRealm = try! Realm()
-    var realm = try! Realm()
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        setupRealm()
-    }
+    // Realm
+    lazy var realm = try! Realm()
+    var token: NotificationToken?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print(Realm.Configuration.defaultConfiguration.fileURL!)
         
-        setupDefaultRealm()
-//        setupRealm()
+        subscribeToRealmNotifications()
         setupUI()
         setupCollectionView()
-        setupInitialData()
     }
     
-    //MARL:- Setup
-    fileprivate func setupDefaultRealm() {
-        
-        
-        
-        
+    deinit {
+        token?.invalidate()
     }
     
-    
-    
-    fileprivate func setupRealm() {
-        guard let photoRealmFileURL = Realm.Configuration.getFileURL("Photo.realm") else {return}
-//        guard let transportRealmFileURL = Realm.Configuration.getFileURL("Transport.realm") else {return}
-        print(photoRealmFileURL)
-        let photoConfig = Realm.Configuration(fileURL: photoRealmFileURL, objectTypes: [Photo.self])
-//        let tranportConfig = Realm.Configuration(fileURL: transportRealmFileURL, objectTypes: [Transport.self])
-
-        do {
-//            photoRealm = try Realm(configuration: photoConfig)
-//            transportRealm = try Realm(configuration: tranportConfig)
-//
-//            let cars = Transport()
-//            cars.name = "cars"
-//
-//            let planes = Transport()
-//            planes.name = "planes"
-//
-//            try transportRealm.write {
-//                transportRealm.add(cars)
-//                transportRealm.add(planes)
-//            }
-
-        } catch let error {
-            print("Error setting Photo Realm: ", error.localizedDescription)
-        }
-    }
-    
+    //MARK:- Setup
     fileprivate func setupUI() {
         collectionView.backgroundColor = .white
         
         navigationItem.titleView = segmentedControl
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Read Realm", style: .plain, target: self, action: #selector(readRealm))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Clear All", style: .plain, target: self, action: #selector(clearAllButtonTapped))
         
-        view.addSubview(toolBar)
-        toolBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        toolBar.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        toolBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
+        let buttons = [UIBarButtonItem(title: "Fetch", style: .plain, target: self, action: #selector(fetchPhotosAsynchronously)),
+                       UIBarButtonItem(title: "Read", style: .plain, target: self, action: #selector(readRealm))]
         
-        let flexibleSpaceItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: self, action: nil)
-        let toolBarItems = [UIBarButtonItem(title: "Clear All", style: .plain, target: self, action: #selector(clearAllButtonTapped)),
-                            flexibleSpaceItem,
-                            UIBarButtonItem(title: "Fetch Photos", style: .plain, target: self, action: #selector(fetchButtonTapped))]
-        toolBar.items = toolBarItems
-    
+        navigationItem.rightBarButtonItems = buttons
     }
     
     fileprivate func setupCollectionView() {
@@ -111,142 +67,201 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     }
     
     fileprivate func setupInitialData() {
-        let realm = try! Realm()
-        let objects = realm.objects(Photo.self)
-        photosArray = objects.map({ (photo) -> Photo in
-            return photo
-        })
-    }
-    
-    //MARK:- Button Actions
-    @objc fileprivate func fetchButtonTapped() {
-        let alertController = UIAlertController(title: "Fetch Photos", message: nil, preferredStyle: .actionSheet)
-        let fetchPhotosByDispatchGroup = UIAlertAction(title: "By Dispatch Group", style: .default) { (_) in
-            self.fetchPhotosByDispatchGroup()
-        }
-        
-        let fetchPhotosSynchronously = UIAlertAction(title: "Asynchronously", style: .default) { (_) in
-            self.fetchPhotosAsynchronously()
-        }
-        
-        let fetchPhotosWithSemaphore = UIAlertAction(title: "With Semaphore", style: .default) { (_) in
-//            self.fetchPhotosWithSemaphore()
-        }
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-        
-        alertController.addAction(cancelAction)
-        alertController.addAction(fetchPhotosByDispatchGroup)
-        alertController.addAction(fetchPhotosSynchronously)
-        alertController.addAction(fetchPhotosWithSemaphore)
-        present(alertController, animated: true, completion: nil)
-        
-    }
-    
-     @objc fileprivate func clearAllButtonTapped() {
-        let deleteQueue = DispatchQueue(label: "deleteQueue", qos: .background)
-        
-        deleteQueue.async {
-            self.deleteAllPhotosFromRealm()
+        do {
+            let realm = try Realm()
+            let objects = realm.objects(Photo.self)
+            photosArray = objects.map({ (photo) -> Photo in
+                return photo
+            })
             
-            DispatchQueue.main.async {
-                self.deletePhotosFromCollectionView()
+        } catch let error {
+            NSLog("Error setting up initial data: %@", error.localizedDescription)
+        }
+    }
+    
+    fileprivate func subscribeToRealmNotifications() {
+        do {
+            let realm = try Realm()
+            let results = realm.objects(Photo.self)
+            
+            token = results.observe({ (changes) in
+                switch changes {
+                case .initial:
+                    self.setupInitialData()
+                    self.collectionView.reloadData()
+                    
+                case .update(_, _, let insertions, _):
+                    if !insertions.isEmpty {
+                        self.handleInsertionsWhenNotified(insertions: insertions)
+                    }
+
+                case .error(let error):
+                    self.handleError(error as NSError)
+                }
+            })
+            
+        } catch let error {
+            NSLog("Error subscribing to Realm Notifications: %@", error.localizedDescription)
+        }
+    }
+    
+    static var num: Int = 0
+    var array = NSArray()
+    var mutableArray = NSMutableArray()
+    var detachedPhotoArray = Array<Photo>()
+    var safePhotoArray = [PhotoSafeObject]()
+    
+    fileprivate func handleInsertionsWhenNotified(insertions: [Int]) {
+        let lock = NSLock()
+        let queue = DispatchQueue(label: "queue", qos: .userInitiated)
+
+        queue.async {
+            do {
+                HomeController.num += 1
+
+                if HomeController.num > 1 {
+//                    return
+                }
+
+                let realm = try Realm()
+                realm.refresh()
+                let objects = realm.objects(Photo.self)
+
+                lock.lock()
+                for insertion in insertions {
+                    let photo = objects[insertion]
+                    self.update(photo: photo)
+                }
+
+                ///Making photos accessible just before the end of the Realm's lifecycle so that we can use it outside.
+                ///Using class for PhotoSafeObject will not crash.
+                ///Mapping to structs or Array<Photo> will crash the app because Realm no longer holds the photo object.
+//                self.safePhotoArray = objects.map({ (photo) -> PhotoSafeObject in
+//                    return PhotoSafeObject(photo: photo)
+//                })
+                
+                ///To make a temporary copy of the realm objects, use a detached array
+                ///https://stackoverflow.com/questions/31707157/detach-an-object-from-a-realm
+                ///A value type of class types
+                self.detachedPhotoArray = objects.map({ (photo) -> Photo in
+                    return Photo(value: photo)
+                })
+            
+                ///A class type of class types
+                self.mutableArray = NSMutableArray(array: (self.detachedPhotoArray))
+
+                ///Use NSArray instead of NSMutableArray
+                self.array = NSArray(array: self.detachedPhotoArray)
+                lock.unlock()
+
+            } catch let error {
+                NSLog("Error updating photos in Realm Notifications", error.localizedDescription)
             }
         }
-    }
-    
-    fileprivate func insertPhotosToCollectionView() {
-        var indexPathsToAdd = [IndexPath]()
         
-        for (index, _) in self.photosArray.enumerated() {
-            let indexPath = IndexPath(item: index, section: 0)
-            indexPathsToAdd.append(indexPath)
-        }
-        self.collectionView.insertItems(at: indexPathsToAdd)
-    }
-    
-    fileprivate func deletePhotosFromCollectionView() {
-        var indexPathsToDelete = [IndexPath]()
+        let readQueue = DispatchQueue(label: "readQueue", qos: .userInitiated, attributes: .concurrent)
+
+        readQueue.async {
+            lock.lock()
+//            self.safePhotoArray.forEach({ (photo) in
+//                print(photo.id ?? "", Thread.current)
+//            })
         
-        for (index, _) in self.photosArray.enumerated() {
-            let indexPath = IndexPath(item: index, section: 0)
-            indexPathsToDelete.append(indexPath)
-        }
-        
-        self.photosArray.removeAll()
-        self.collectionView.deleteItems(at: indexPathsToDelete)
-    }
-    
-    fileprivate func deleteSelectedPhotoFromRealm(photo: Photo) {
-        let realm = try! Realm()
-        let selectedRealmPhoto = realm.objects(Photo.self).filter("id == %@", photo.id ?? "")
-        
-        try! realm.write {
-            realm.delete(selectedRealmPhoto)
+            print(Unmanaged.passRetained(self.mutableArray).toOpaque())
+            self.mutableArray.forEach({ (object) in
+                let photo = object as! Photo
+                print(Unmanaged.passRetained(photo).toOpaque(),  photo.id ?? "", Thread.current)
+            })
+            lock.unlock()
         }
     }
-    
     
     //MARK:- Realm
     fileprivate func savePhotoToRealm(photo: Photo) {
-//        guard let photoFileURL = Realm.Configuration.getFileURL("Photo.realm") else {return}
-//
-//        let config = Realm.Configuration(fileURL: photoFileURL)
-        
         do {
-//            let realm = try Realm(configuration: config)
-            let realm = try Realm()
-            
-            let realmPhoto = Photo()
-            realmPhoto.id = photo.id
-            realmPhoto.farm = photo.farm
-            realmPhoto.server = photo.server
-            realmPhoto.secret = photo.secret
-            realmPhoto.imageData = photo.imageData
-            
-            try realm.write {
-                realm.add(realmPhoto)
+            try autoreleasepool {
+                
+                let realm = try Realm()
+                let realmPhoto = createCopy(photo: photo)
+                let existingPhoto = realm.objects(Photo.self).filter("id == %@", photo.id ?? "")
+
+                if existingPhoto.isEmpty {
+                    try realm.write {
+                        realm.add(realmPhoto)
+                        NSLog("Successfully saved photo: %@", photo.id ?? "")
+                    }
+                }
             }
         } catch let error {
             print("Error writing to photo realm: ", error.localizedDescription)
         }
-        
     }
-    
-    fileprivate func saveToRealm() {
-        let realm = try! Realm()
-        
-        photosArray.forEach { (photo) in
-            try! realm.write {
-                realm.add(photo)
+
+    func deleteAllPhotosFromRealm() {
+        do {
+            let realm = try Realm()
+            
+            try realm.write {
+                realm.deleteAll()
             }
+        } catch let error {
+            NSLog("Error deleting all photos from realm: %@", error.localizedDescription)
         }
         
-    }
-    
-    fileprivate func deleteAllPhotosFromRealm() {
-        let realm = try! Realm()
-        
-        try! realm.write {
-            realm.deleteAll()
-        }
     }
     
     @objc fileprivate func readRealm() {
-        let queue2 = DispatchQueue(label: "queue2", qos: .background)
         let lock = NSLock()
         
-        queue2.async {
-            let realm = try! Realm()
-            let objects = realm.objects(Photo.self)
+        print(Unmanaged.passRetained(mutableArray).toOpaque())
+        array.forEach({ (object) in
+            let photo = object as! Photo
+            photo.name = photo.secret ?? ""
+            print(Unmanaged.passRetained(photo).toOpaque(), photo.id ?? "")
+        })
+        
+        
+        
+//        DispatchQueue.global(qos: .background).async {
+//            let realm = try! Realm()
+//            let objects = realm.objects(Photo.self)
+//
+//            lock.lock()
+//            objects.forEach({ (photo) in
+//                print("Reading Photo", photo.id ?? "", Thread.current)
+////                self.updateName(photo: photo)
+//            })
+//            lock.unlock()
+//        }
+    }
+    
+    func update(photo: Photo) {
+        do {
+            let realm = try Realm()
+            let updatedPhoto = createCopy(photo: photo)
             
-            lock.lock()
-            objects.forEach({ (photo) in
-                print("Reading Photo", photo.id ?? "", Thread.current)
-            })
+            let transport = Transport()
+            transport.name = searchText
+            updatedPhoto.transport = transport
             
-            lock.unlock()
+            try realm.write {
+                realm.add(updatedPhoto, update: true)
+                NSLog("Successfully updated photo: %@", photo.id ?? "")
+            }
+        } catch let error {
+            NSLog("Error updating photo name on realm: %@", error.localizedDescription)
         }
+    }
+    
+    func createCopy(photo: Photo) -> Photo {
+        let copiedPhoto = Photo()
+        copiedPhoto.id = photo.id
+        copiedPhoto.farm = photo.farm
+        copiedPhoto.server = photo.server
+        copiedPhoto.secret = photo.secret
+        copiedPhoto.imageData = photo.imageData
+        copiedPhoto.name = photo.name
+        return copiedPhoto
     }
     
     //MARK:- Networking Fetch
@@ -255,22 +270,19 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     This function will fetch photosInformation from Flickr first, and then download the photoData one by one.
     The intent is to wait for all photos downloading to be completed and then refresh the UI once.
     */
-    fileprivate func fetchPhotosByDispatchGroup() {
+    func fetchPhotosByDispatchGroup() {
         let hud = JGProgressHUD(style: .dark)
         hud.textLabel.text = "Fetching..."
         hud.show(in: self.view)
         
         FlickrClient.shared.getPhotoListWithText("cars") { [weak self] (photos, error) in
-            print("Get Photos With Text Thread Completed:", Thread.current) //background
+            print("Get Photos With Text Completed:", Thread.current) //background
             
             DispatchQueue.main.async {
                 hud.textLabel.text = "Downloading..."
             }
 
-            if let error = error {
-                print(error.localizedDescription)
-                return
-            }
+            self?.handleError(error)
             
             if let photos = photos {
                 let downloadGroup = DispatchGroup()
@@ -280,14 +292,11 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
                     
                     //getImageData is called on background thread concurrently
                     FlickrClient.shared.downloadImageData(photo, { (data, error) in
-                        
-                        if let error = error {
-                            print(error.localizedDescription)
-                            return
-                        }
+                        self?.handleError(error)
                         
                         if let data = data {
                             photo.imageData = data
+                            
                             self?.savePhotoToRealm(photo: photo)
                             self?.photosArray.append(photo)
                             downloadGroup.leave()
@@ -308,43 +317,39 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     This function fetches photoInformation from Flickr, and then moved the operation synchronously to download
     photoData. Once each photoData is downloaded, it is added to the UI via the main thread.
     */
-    fileprivate func fetchPhotosAsynchronously() {
-        FlickrClient.shared.getPhotoListWithText("planes", completion: { (photos, error) in
-            print("Get Photos With Text Thread Completed:", Thread.current) //background
+    @objc func fetchPhotosAsynchronously() {
+        FlickrClient.shared.getPhotoListWithText(searchText, completion: { [weak self] (photos, error) in
+            print("Get Photos With Text Completed:", Thread.current) //background
 
-            if let error = error {
-                print(error.localizedDescription)
-                return
-            }
+            self?.handleError(error)
             
             guard let photos = photos else {return}
-       
-            let queue = DispatchQueue(label: "queue1", qos: .background, attributes: .concurrent)
-           
-            for (index, _) in photos.enumerated() {
-                queue.async(flags: .barrier) {
+            
+            let queue = DispatchQueue(label: "queue1", qos: .userInitiated , attributes: .concurrent)
+            
+            queue.async { // Redundant?
+                for (index, _) in photos.enumerated() {
                     FlickrClient.shared.downloadImageData(photos[index], { (data, error) in
-                        print("\(index) Get images:", Thread.current) //background, but asynchronously
+//                        print("Get images \(index):", Thread.current) //background, but asynchronously
 
-                        if let error = error {
-                            print(error.localizedDescription)
-                            return
-                        }
+                        self?.handleError(error)
 
                         if let data = data {
                             let photo = photos[index]
                             photo.imageData = data
-                            self.savePhotoToRealm(photo: photo)
+                            self?.savePhotoToRealm(photo: photo)
                             
                             DispatchQueue.main.async {
-                                self.photosArray.append(photo)
-                                let indexPath = IndexPath(item: self.photosArray.count - 1, section: 0)
-                                self.collectionView.insertItems(at: [indexPath])
+                                self?.photosArray.append(photo)
+                                
+                                if let count = self?.photosArray.count {
+                                    let indexPath = IndexPath(item: count - 1, section: 0)
+                                    self?.collectionView.insertItems(at: [indexPath])
+                                }
                             }
                         }
                     })
                 }
-               
             }
         })
     }
@@ -422,52 +427,11 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
 //        }
 //    }
     
-    
-    //MARK:- CollectionView
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photosArray.count
-    }
-    
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! ImageCell
-        let photo = photosArray[indexPath.row]
-        cell.idLabel.text = photo.id ?? ""
-        if let data = photo.imageData {
-            cell.imageView.image = UIImage(data: data)
+    func handleError(_ error: NSError?) {
+        if let error = error {
+            NSLog("%@", error.localizedDescription)
+            return
         }
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = UIScreen.main.bounds.width / 3 - 1
-        return CGSize(width: width, height: width)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 1
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 1
-    }
-    
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let selectedPhoto = photosArray[indexPath.item]
-        
-        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { (_) in
-            self.deleteSelectedPhotoFromRealm(photo: selectedPhoto)
-            
-            DispatchQueue.main.async {
-                self.photosArray.remove(at: indexPath.item)
-                self.collectionView.deleteItems(at: [indexPath])
-            }
-        }
-        
-        alertController.addAction(deleteAction)
-        alertController.addAction(cancelAction)
-        present(alertController, animated: true)
     }
     
 }

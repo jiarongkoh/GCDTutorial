@@ -17,11 +17,16 @@
 		2A1AA2AC21EF0B0100CD3B5D /* FlickrClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1AA2AB21EF0B0100CD3B5D /* FlickrClient.swift */; };
 		2A1AA2AE21EF0E7B00CD3B5D /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1AA2AD21EF0E7B00CD3B5D /* Constants.swift */; };
 		2A1AA2B121EF1F0200CD3B5D /* ImageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1AA2B021EF1F0200CD3B5D /* ImageCell.swift */; };
+		2A36B54322018E620032837D /* HomeController + ButtonActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A36B54222018E620032837D /* HomeController + ButtonActions.swift */; };
 		2A3BC5E821F02CE80034A739 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A3BC5E721F02CE80034A739 /* Photo.swift */; };
 		2AAC18E021FAA5CC0036A84F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AAC18DF21FAA5CC0036A84F /* Extensions.swift */; };
+		2AAC18EB21FAEF6C0036A84F /* HomeController + CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AAC18EA21FAEF6C0036A84F /* HomeController + CollectionView.swift */; };
 		2AB92DAB21F5A0820007D24C /* RetainCycleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB92DAA21F5A0820007D24C /* RetainCycleController.swift */; };
 		2ABD6FCA21F17E9800EF9926 /* Transport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABD6FC921F17E9800EF9926 /* Transport.swift */; };
 		2ABD6FCC21F1B16200EF9926 /* Realm + Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABD6FCB21F1B16200EF9926 /* Realm + Extensions.swift */; };
+		2AD1BD2C21FEE38600B0F3C3 /* MainTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD1BD2B21FEE38600B0F3C3 /* MainTabBarController.swift */; };
+		2AD1BD2E21FEE4E500B0F3C3 /* FriendsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD1BD2D21FEE4E500B0F3C3 /* FriendsController.swift */; };
+		2AD1BD3021FEE9AD00B0F3C3 /* Friend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD1BD2F21FEE9AD00B0F3C3 /* Friend.swift */; };
 		41043C244926A044ABE56379 /* Pods_GCDTutorialTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF892FB651E68FB19B1EB59C /* Pods_GCDTutorialTests.framework */; };
 		CB7570A9C21888F8944ADB63 /* Pods_GCDTutorial.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E45DCB4DAF7FA347B13BA10 /* Pods_GCDTutorial.framework */; };
 		EC9F84A0B41DF887F1B0FD72 /* Pods_GCDTutorialUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E18EAFFAC8DE99D024C6CDE9 /* Pods_GCDTutorialUITests.framework */; };
@@ -62,11 +67,16 @@
 		2A1AA2AB21EF0B0100CD3B5D /* FlickrClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickrClient.swift; sourceTree = "<group>"; };
 		2A1AA2AD21EF0E7B00CD3B5D /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		2A1AA2B021EF1F0200CD3B5D /* ImageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCell.swift; sourceTree = "<group>"; };
+		2A36B54222018E620032837D /* HomeController + ButtonActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeController + ButtonActions.swift"; sourceTree = "<group>"; };
 		2A3BC5E721F02CE80034A739 /* Photo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
 		2AAC18DF21FAA5CC0036A84F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		2AAC18EA21FAEF6C0036A84F /* HomeController + CollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HomeController + CollectionView.swift"; sourceTree = "<group>"; };
 		2AB92DAA21F5A0820007D24C /* RetainCycleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetainCycleController.swift; sourceTree = "<group>"; };
 		2ABD6FC921F17E9800EF9926 /* Transport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transport.swift; sourceTree = "<group>"; };
 		2ABD6FCB21F1B16200EF9926 /* Realm + Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Realm + Extensions.swift"; sourceTree = "<group>"; };
+		2AD1BD2B21FEE38600B0F3C3 /* MainTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabBarController.swift; sourceTree = "<group>"; };
+		2AD1BD2D21FEE4E500B0F3C3 /* FriendsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsController.swift; sourceTree = "<group>"; };
+		2AD1BD2F21FEE9AD00B0F3C3 /* Friend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Friend.swift; sourceTree = "<group>"; };
 		305C69B5280D8ADA5C5D0CF9 /* Pods-GCDTutorialTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GCDTutorialTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-GCDTutorialTests/Pods-GCDTutorialTests.release.xcconfig"; sourceTree = "<group>"; };
 		72267ABB04CAA098104FB2B5 /* Pods-GCDTutorial.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GCDTutorial.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GCDTutorial/Pods-GCDTutorial.debug.xcconfig"; sourceTree = "<group>"; };
 		74C863721F7F565C49C1AE7F /* Pods-GCDTutorialTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GCDTutorialTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GCDTutorialTests/Pods-GCDTutorialTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -171,7 +181,11 @@
 		2A1AA2A921EF0A6C00CD3B5D /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				2AD1BD2B21FEE38600B0F3C3 /* MainTabBarController.swift */,
 				2A1AA27C21EEFB1800CD3B5D /* HomeController.swift */,
+				2AAC18EA21FAEF6C0036A84F /* HomeController + CollectionView.swift */,
+				2A36B54222018E620032837D /* HomeController + ButtonActions.swift */,
+				2AD1BD2D21FEE4E500B0F3C3 /* FriendsController.swift */,
 				2AB92DAA21F5A0820007D24C /* RetainCycleController.swift */,
 			);
 			path = Controllers;
@@ -201,6 +215,7 @@
 			children = (
 				2A3BC5E721F02CE80034A739 /* Photo.swift */,
 				2ABD6FC921F17E9800EF9926 /* Transport.swift */,
+				2AD1BD2F21FEE9AD00B0F3C3 /* Friend.swift */,
 				2ABD6FCB21F1B16200EF9926 /* Realm + Extensions.swift */,
 			);
 			path = Realm;
@@ -460,10 +475,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				2A3BC5E821F02CE80034A739 /* Photo.swift in Sources */,
+				2AD1BD3021FEE9AD00B0F3C3 /* Friend.swift in Sources */,
 				2ABD6FCA21F17E9800EF9926 /* Transport.swift in Sources */,
+				2AD1BD2E21FEE4E500B0F3C3 /* FriendsController.swift in Sources */,
+				2AD1BD2C21FEE38600B0F3C3 /* MainTabBarController.swift in Sources */,
 				2A1AA27D21EEFB1800CD3B5D /* HomeController.swift in Sources */,
+				2A36B54322018E620032837D /* HomeController + ButtonActions.swift in Sources */,
 				2A1AA27B21EEFB1800CD3B5D /* AppDelegate.swift in Sources */,
 				2A1AA2AC21EF0B0100CD3B5D /* FlickrClient.swift in Sources */,
+				2AAC18EB21FAEF6C0036A84F /* HomeController + CollectionView.swift in Sources */,
 				2A1AA2AE21EF0E7B00CD3B5D /* Constants.swift in Sources */,
 				2A1AA2B121EF1F0200CD3B5D /* ImageCell.swift in Sources */,
 				2ABD6FCC21F1B16200EF9926 /* Realm + Extensions.swift in Sources */,
